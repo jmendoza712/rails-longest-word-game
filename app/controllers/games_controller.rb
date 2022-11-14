@@ -1,3 +1,5 @@
+# https://github.com/lewagon/rails-longest-word-game
+
 require 'json'
 require "open-uri"
 
@@ -13,39 +15,22 @@ class GamesController < ApplicationController
 
   # To display the score.
   def score
-    # raise <!-- breaks the code -->
     # Get the word from user
-    @word = params[:word].capitalize
+    @word = params[:word]
 
     # Score scenarios
     # 1- The word can’t be built out of the original grid
     # 2- The word is valid according to the grid, but is not a valid English word
     # 3- The word is valid according to the grid and is an English word
 
-    @grid = params[:grid].split(" ") # convets grid from string to array
+    @grid = params[:grid].split(" ") # Convets grid from string to array
+    @included = included?(@word, @grid) # Returns true or false
 
-    @grid.map { |letter| @word.include?(letter) }
-
-
-
-
-    for number in (0..@grid.length) do
-      if @word.include?("#{@grid[number]}")
-        @message = english_word?
-      else
-        @message = "Sorry but #{@word} can't be buid out of #{@grid}"
-      end
+    if @included
+      @message = english_word?
+    else
+      @message = "Sorry but #{@word} can't be build out of #{@grid}"
     end
-
-    # Validate the word using given API
-    # @valid_word = validation(@word)["found"]
-    # case @valid_word
-    # when false
-    #   @message = "Sorry but #{@word} does not seem to be a valid English word"
-    # when true
-    #   @message = "Congratulations! #{@word} is a valid English word!"
-    # end
-  end
 
   private
 
@@ -53,6 +38,10 @@ class GamesController < ApplicationController
     url = "https://wagon-dictionary.herokuapp.com/#{attempt}"
     lewagon_serialized = URI.open(url).read
     return JSON.parse(lewagon_serialized) #API hash
+  end
+
+  def included?(word, letters)
+    word.chars.all? { |letter| word.count(letter) <= letters.count(letter) }
   end
 
   def english_word?
